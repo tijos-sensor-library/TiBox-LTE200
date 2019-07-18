@@ -115,11 +115,11 @@ public class TiEC20 extends Thread {
 	 * @throws IOException
 	 */
 	public boolean isReady() throws IOException {
-		String resp = sendCommand("AT");
+		String resp = sendCommand("AT");		
 		if(resp == null)
 			return false;
 		
-		if(resp.equals("AT") || resp.length() == 0)
+		if(resp.equals("AT"))
 			return true;
 
 		return false;
@@ -281,8 +281,9 @@ public class TiEC20 extends Thread {
 	 * @throws IOException
 	 */
 	public boolean checkSIMCard() throws IOException {
-		String resp = sendCommand2("AT+CPIN?" , "+CPIN");
-
+		String resp = sendCommand("AT+CPIN?");
+		
+		
 		if (resp.equals("+CPIN: READY"))
 			return true;
 
@@ -639,8 +640,8 @@ public class TiEC20 extends Thread {
 	 * @throws IOException
 	 */
 	public void startup() throws IOException {
-
-		int loop = 10;
+		
+		int loop = 20;
 		while(!this.isReady() && loop -- > 0) {
 			Delay.msDelay(1000);
 		};
@@ -833,7 +834,8 @@ public class TiEC20 extends Thread {
 	}
 
 	private void mqttLinkChanged(String resp) throws IOException {
-		System.out.println("mqttLinkChanged " + resp);
+		
+		this.logMsg("mqttLinkChanged " + resp);
 
 		int begin = resp.indexOf(':');
 		if (begin < 0)
@@ -851,7 +853,7 @@ public class TiEC20 extends Thread {
 	}
 
 	private void mqttDataArrived(String resp) throws IOException {
-		System.out.println("mqttDataArrived " + resp);
+		this.logMsg("mqttDataArrived " + resp);
 
 		int begin = resp.indexOf(':');
 		if (begin < 0)

@@ -22,25 +22,26 @@ public class TiLTE200 {
 	TiSerialPort rs485;
 
 	private static TiLTE200 lte200Instance;
-	
+
 	private TiLTE200() {
 
 	}
 
 	/**
 	 * Get the single instance
+	 * 
 	 * @return
 	 * @throws IOException
 	 */
 	public static TiLTE200 getInstance() throws IOException {
-		if( lte200Instance == null) {
+		if (lte200Instance == null) {
 			lte200Instance = new TiLTE200();
 			lte200Instance.initialize();
 		}
-		
+
 		return lte200Instance;
 	}
-	
+
 	/**
 	 * Initialize
 	 * 
@@ -53,12 +54,11 @@ public class TiLTE200 {
 		// D4
 		gpioLED.setWorkMode(6, TiGPIO.OUTPUT_PP);
 
-		gpioEC20 = TiGPIO.open(2, 7, 8);
-		gpioEC20.setWorkMode(7, TiGPIO.OUTPUT_PP);
-		gpioEC20.setWorkMode(8, TiGPIO.OUTPUT_PP);
-
 		TiUART uart = TiUART.open(2);
 		uart.setWorkParameters(8, 1, TiUART.PARITY_NONE, 115200);
+
+		gpioEC20 = TiGPIO.open(2, 7,8);
+		gpioEC20.setWorkMode(7, TiGPIO.OUTPUT_PP);
 
 		ec20 = new TiEC20(uart);
 	}
@@ -89,7 +89,7 @@ public class TiLTE200 {
 	 * @throws IOException
 	 */
 	public void turnOnUserLED(int id) throws IOException {
-		if (id != 0 && id != 0)
+		if (id != 0 && id != 1)
 			throw new IOException("Invalid id");
 
 		gpioLED.writePin(5 + id, 0);
@@ -102,7 +102,7 @@ public class TiLTE200 {
 	 * @throws IOException
 	 */
 	public void turnOffUserLED(int id) throws IOException {
-		if (id != 0 && id != 0)
+		if (id != 0 && id != 1)
 			throw new IOException("Invalid id");
 
 		gpioLED.writePin(5 + id, 1);
@@ -114,10 +114,15 @@ public class TiLTE200 {
 	 * @throws IOException
 	 */
 	public void networkWakeUp() throws IOException {
-		gpioEC20.writePin(7, 1);
-		Delay.msDelay(1000);
-		gpioEC20.writePin(7, 0);
-		Delay.msDelay(15000);
+
+		int loop = 3;
+		while(!this.ec20.isReady() && loop -- > 0) {
+			
+			gpioEC20.writePin(7, 1);
+			Delay.msDelay(550);
+			gpioEC20.writePin(7, 0);
+			Delay.msDelay(5000);
+		}
 	}
 
 	/**
@@ -126,10 +131,13 @@ public class TiLTE200 {
 	 * @throws IOException
 	 */
 	public void networkReset() throws IOException {
+
+		gpioEC20.setWorkMode(8, TiGPIO.OUTPUT_PP);
+
 		gpioEC20.writePin(8, 1);
-		Delay.msDelay(1000);
+		Delay.msDelay(500);
 		gpioEC20.writePin(8, 0);
-		Delay.msDelay(15000);
+		Delay.msDelay(5000);
 	}
 
 	/**
@@ -138,7 +146,15 @@ public class TiLTE200 {
 	 * @throws IOException
 	 */
 	public void networkStartup() throws IOException {
-		this.ec20.startup();
+		try {
+			this.ec20.startup();
+		}
+		catch(Exception ex) {
+			ex.printStackTrace();
+			
+			networkReset();
+			this.ec20.startup();
+		}
 	}
 
 	/**

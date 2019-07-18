@@ -2,8 +2,8 @@ package tijos.framework.sensor.ec20.io;
 
 public class ATResponse {
 
-	private String response;
-	private String keywords;
+	private String response = "";
+	private String keywords = "";
 
 	public void reset() {
 		this.response = "";

@@ -40,13 +40,21 @@ public class TiLTE200Sample {
 			lte200.turnOnUserLED(0);
 			lte200.turnOnUserLED(1);
 
-			lte200.networkWakeUp();
-			MQTTClient mqtt = lte200.getMQTTClient("mqtt.tijcloud.com", 1833, MQTTClient.generateClientId());
+			lte200.networkReset();
+			lte200.networkStartup();
+			MQTTClient mqtt = lte200.getMQTTClient("mqtt.tijcloud.com", 1883, MQTTClient.generateClientId());
 
 			mqtt.setEventListener(new MQTTEventListner());
 
 			MQTTConnectOptions options = new MQTTConnectOptions();
-			mqtt.connect(options);
+			
+			
+			try {
+				mqtt.connect(options);
+			}
+			catch(Exception ex) {
+				ex.printStackTrace();
+			}
 
 			TiSerialPort rs485 = lte200.getRS485(9600, 8, 1, TiUART.PARITY_NONE);
 			ModbusClient modbusRtu = new ModbusClient(rs485);
